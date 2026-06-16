@@ -1,0 +1,10 @@
+{
+  "name": "marketscout",
+  "private": true,
+  "scripts": {
+    "dev:web": "npm run dev --prefix apps/web",
+    "dev:api": "cd apps/api && .venv/bin/uvicorn main:app --reload --port 8000",
+    "build:web": "npm run build --prefix apps/web",
+    "install:all": "npm install --prefix apps/web && cd apps/api && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt"
+  }
+}
