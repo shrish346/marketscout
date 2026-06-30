@@ -142,16 +142,18 @@ export default function HomePage() {
   );
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
-      <header className="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+    <div className="min-h-screen">
+      <header className="sticky top-0 z-40 border-b border-blue-100/80 bg-white/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">MarketScout</h1>
-            <p className="text-sm text-zinc-500">Unified search across messy marketplaces</p>
+          <div className="animate-fade-in-up">
+            <h1 className="bg-gradient-to-r from-blue-900 to-sky-500 bg-clip-text text-2xl font-bold tracking-tight text-transparent">
+              MarketScout
+            </h1>
+            <p className="text-sm text-slate-500">Unified search across messy marketplaces</p>
           </div>
           <Link
             href="/settings"
-            className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
+            className="rounded-lg border border-blue-200 px-4 py-2 text-sm font-medium text-blue-900 transition-colors hover:bg-blue-50"
           >
             Settings
           </Link>
@@ -175,7 +177,7 @@ export default function HomePage() {
         <AgentProgress status={agentStatus} />
 
         {error && (
-          <div className="rounded-xl border border-red-300 bg-red-50 p-4 text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">
+          <div className="animate-fade-in-up rounded-xl border border-red-300 bg-red-50 p-4 text-red-800">
             {error}
           </div>
         )}
@@ -193,7 +195,7 @@ export default function HomePage() {
         )}
 
         {searchComplete && displayed.length === 0 && !error && (
-          <div className="rounded-xl border border-zinc-200 bg-white p-8 text-center text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="animate-fade-in-up rounded-xl border border-blue-100 bg-white p-8 text-center text-slate-500 shadow-sm">
             No listings matched your filters. Try broadening your search or adjusting filters.
           </div>
         )}

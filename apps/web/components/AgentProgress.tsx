@@ -19,27 +19,27 @@ export function AgentProgress({ status }: AgentProgressProps) {
   }
 
   return (
-    <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
-      <p className="mb-3 text-sm font-medium text-zinc-600 dark:text-zinc-400">Agent progress</p>
+    <div className="animate-fade-in-up rounded-xl border border-blue-100 bg-blue-50/50 p-4">
+      <p className="mb-3 text-sm font-medium text-slate-600">Agent progress</p>
       <div className="flex flex-wrap gap-3">
         {entries.map(([source, info]) => (
           <div
             key={source}
-            className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm shadow-sm dark:bg-zinc-800"
+            className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-blue-100 transition-all"
           >
             <span
               className={`h-2 w-2 rounded-full ${
                 info.state === "running"
-                  ? "animate-pulse bg-amber-400"
+                  ? "animate-pulse bg-sky-400 ring-4 ring-sky-400/20"
                   : info.state === "done"
                     ? "bg-emerald-500"
                     : info.state === "error"
                       ? "bg-red-500"
-                      : "bg-zinc-300"
+                      : "bg-slate-300"
               }`}
             />
-            <span className="font-medium">{LABELS[source]}</span>
-            <span className="text-zinc-500">
+            <span className="font-medium text-slate-700">{LABELS[source]}</span>
+            <span className="text-slate-500">
               {info.state === "running" && "Searching..."}
               {info.state === "done" && `${info.count} found`}
               {info.state === "error" && (info.error || "Failed")}

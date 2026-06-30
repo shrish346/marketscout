@@ -41,7 +41,7 @@ export function SearchBar({
   };
 
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+    <div className="animate-fade-in-up rounded-2xl border border-blue-100 bg-white p-6 shadow-sm shadow-blue-900/5">
       <div className="flex flex-col gap-4 lg:flex-row">
         <input
           type="text"
@@ -49,32 +49,33 @@ export function SearchBar({
           onChange={(e) => onQueryChange(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && onSearch()}
           placeholder='Search listings, e.g. "e bike"'
-          className="flex-1 rounded-xl border border-zinc-300 bg-zinc-50 px-4 py-3 text-lg outline-none focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-800"
+          className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-lg outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
         />
         <button
           type="button"
           onClick={onSearch}
           disabled={loading || !query.trim() || sources.length === 0}
-          className="rounded-xl bg-emerald-600 px-8 py-3 font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-700 to-blue-600 px-8 py-3 font-semibold text-white shadow-lg shadow-blue-600/20 transition-all hover:from-blue-600 hover:to-blue-500 hover:shadow-blue-600/30 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-blue-600/20"
         >
+          {loading && <span className="spinner" />}
           {loading ? "Searching..." : "Search"}
         </button>
       </div>
 
       <div className="mt-4 grid gap-4 md:grid-cols-3">
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium text-zinc-600 dark:text-zinc-400">Zip code</span>
+          <span className="font-medium text-slate-600">Zip code</span>
           <input
             type="text"
             value={zipCode}
             onChange={(e) => onZipChange(e.target.value)}
             maxLength={5}
-            className="rounded-lg border border-zinc-300 bg-zinc-50 px-3 py-2 outline-none focus:border-emerald-500 dark:border-zinc-700 dark:bg-zinc-800"
+            className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
           />
         </label>
 
         <label className="flex flex-col gap-1 text-sm md:col-span-2">
-          <span className="font-medium text-zinc-600 dark:text-zinc-400">
+          <span className="font-medium text-slate-600">
             Radius: {radius} miles
           </span>
           <input
@@ -84,26 +85,33 @@ export function SearchBar({
             step={5}
             value={radius}
             onChange={(e) => onRadiusChange(Number(e.target.value))}
-            className="accent-emerald-600"
+            className="accent-blue-600"
           />
         </label>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-3">
-        {SOURCE_OPTIONS.map((option) => (
-          <label
-            key={option.id}
-            className="flex cursor-pointer items-center gap-2 rounded-full border border-zinc-300 px-4 py-2 text-sm dark:border-zinc-700"
-          >
-            <input
-              type="checkbox"
-              checked={sources.includes(option.id)}
-              onChange={() => toggleSource(option.id)}
-              className="accent-emerald-600"
-            />
-            {option.label}
-          </label>
-        ))}
+        {SOURCE_OPTIONS.map((option) => {
+          const active = sources.includes(option.id);
+          return (
+            <label
+              key={option.id}
+              className={`flex cursor-pointer items-center gap-2 rounded-full border px-4 py-2 text-sm transition-all ${
+                active
+                  ? "border-blue-500 bg-blue-50 text-blue-900"
+                  : "border-slate-200 text-slate-600 hover:border-blue-300 hover:bg-slate-50"
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={active}
+                onChange={() => toggleSource(option.id)}
+                className="accent-blue-600"
+              />
+              {option.label}
+            </label>
+          );
+        })}
       </div>
     </div>
   );

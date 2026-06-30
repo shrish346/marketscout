@@ -30,16 +30,18 @@ export function SortFilter({
   onMinReliabilityChange,
 }: SortFilterProps) {
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900 md:flex-row md:items-center md:justify-between">
-      <p className="text-sm text-zinc-600 dark:text-zinc-400">{resultCount} results</p>
+    <div className="animate-fade-in flex flex-col gap-4 rounded-xl border border-blue-100 bg-white p-4 shadow-sm md:flex-row md:items-center md:justify-between">
+      <p className="text-sm font-medium text-slate-600">
+        <span className="text-blue-700">{resultCount}</span> results
+      </p>
 
       <div className="flex flex-wrap items-center gap-4">
-        <label className="flex items-center gap-2 text-sm">
+        <label className="flex items-center gap-2 text-sm text-slate-600">
           <span>Sort</span>
           <select
             value={sort}
             onChange={(e) => onSortChange(e.target.value as SortOption)}
-            className="rounded-lg border border-zinc-300 bg-zinc-50 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-800"
+            className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 outline-none transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
           >
             {SORT_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -49,17 +51,17 @@ export function SortFilter({
           </select>
         </label>
 
-        <label className="flex items-center gap-2 text-sm">
+        <label className="flex items-center gap-2 text-sm text-slate-600">
           <input
             type="checkbox"
             checked={hideHighScamRisk}
             onChange={(e) => onHideHighScamRiskChange(e.target.checked)}
-            className="accent-emerald-600"
+            className="accent-blue-600"
           />
           Hide high scam risk
         </label>
 
-        <label className="flex items-center gap-2 text-sm">
+        <label className="flex items-center gap-2 text-sm text-slate-600">
           <span>Min reliability: {minReliability}</span>
           <input
             type="range"
@@ -68,7 +70,7 @@ export function SortFilter({
             step={10}
             value={minReliability}
             onChange={(e) => onMinReliabilityChange(Number(e.target.value))}
-            className="accent-emerald-600"
+            className="accent-blue-600"
           />
         </label>
       </div>
