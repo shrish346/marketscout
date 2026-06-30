@@ -24,22 +24,35 @@ export function subscribeToSearch(
   onError?: (error: Error) => void
 ): () => void {
   const source = new EventSource(`${API_BASE}/api/search/${searchId}/stream`);
+  let closed = false;
+
+  const close = () => {
+    closed = true;
+    source.close();
+  };
 
   source.onmessage = (message) => {
     try {
       const event = JSON.parse(message.data) as SearchEvent;
       onEvent(event);
+      // The server ends the stream after search_complete; close from the
+      // client side so EventSource doesn't treat the normal close as an
+      // error and try to reconnect.
+      if (event.type === "search_complete") {
+        close();
+      }
     } catch (err) {
       onError?.(err instanceof Error ? err : new Error("Invalid event"));
     }
   };
 
   source.onerror = () => {
+    if (closed) return;
     onError?.(new Error("Connection lost"));
-    source.close();
+    close();
   };
 
-  return () => source.close();
+  return close;
 }
 
 export async function fetchResults(searchId: string): Promise<UnifiedListing[]> {

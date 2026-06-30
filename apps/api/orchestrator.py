@@ -118,10 +118,44 @@ async def run_search(search_id: str, request: SearchRequest) -> None:
     search = _searches[search_id]
     search.status = "running"
 
-    cached = await get_cached_results(request, settings.cache_ttl_seconds)
-    if cached:
-        search.listings = cached
-        for listing in cached:
+    try:
+        cached = await get_cached_results(request, settings.cache_ttl_seconds)
+        if cached:
+            search.listings = cached
+            for listing in cached:
+                await _emit(
+                    search_id,
+                    SearchEvent(
+                        type=SearchEventType.LISTING_SCORED,
+                        search_id=search_id,
+                        source=listing.source,
+                        listing=listing,
+                    ),
+                )
+            search.status = "complete"
+            await _emit(
+                search_id,
+                SearchEvent(
+                    type=SearchEventType.SEARCH_COMPLETE,
+                    search_id=search_id,
+                    count=len(cached),
+                    message="Served from cache",
+                ),
+            )
+            return
+
+        location = LocationContext(zip_code=request.zip_code, radius_miles=request.radius_miles)
+        tasks = [
+            _run_adapter(search_id, source, request.query, location, settings.adapter_timeout_seconds)
+            for source in request.sources
+        ]
+        results = await asyncio.gather(*tasks)
+        all_listings = [item for batch in results for item in batch]
+
+        scored = await score_listings(all_listings)
+        search.listings = scored
+
+        for listing in scored:
             await _emit(
                 search_id,
                 SearchEvent(
@@ -131,57 +165,35 @@ async def run_search(search_id: str, request: SearchRequest) -> None:
                     listing=listing,
                 ),
             )
+
+        await set_cached_results(request, scored)
         search.status = "complete"
         await _emit(
             search_id,
             SearchEvent(
                 type=SearchEventType.SEARCH_COMPLETE,
                 search_id=search_id,
-                count=len(cached),
-                message="Served from cache",
+                count=len(scored),
             ),
         )
-        queue = _event_queues.get(search_id)
-        if queue:
-            await queue.put(None)
-        return
-
-    location = LocationContext(zip_code=request.zip_code, radius_miles=request.radius_miles)
-    tasks = [
-        _run_adapter(search_id, source, request.query, location, settings.adapter_timeout_seconds)
-        for source in request.sources
-    ]
-    results = await asyncio.gather(*tasks)
-    all_listings = [item for batch in results for item in batch]
-
-    scored = await score_listings(all_listings)
-    search.listings = scored
-
-    for listing in scored:
+    except Exception as exc:  # noqa: BLE001 - surface any failure to the client
+        search.status = "error"
+        search.error = str(exc)
         await _emit(
             search_id,
             SearchEvent(
-                type=SearchEventType.LISTING_SCORED,
+                type=SearchEventType.SEARCH_COMPLETE,
                 search_id=search_id,
-                source=listing.source,
-                listing=listing,
+                count=len(search.listings),
+                error=str(exc),
+                message="Search failed",
             ),
         )
-
-    await set_cached_results(request, scored)
-    search.status = "complete"
-    await _emit(
-        search_id,
-        SearchEvent(
-            type=SearchEventType.SEARCH_COMPLETE,
-            search_id=search_id,
-            count=len(scored),
-        ),
-    )
-
-    queue = _event_queues.get(search_id)
-    if queue:
-        await queue.put(None)
+    finally:
+        # Always terminate the SSE stream, even if the search crashed.
+        queue = _event_queues.get(search_id)
+        if queue:
+            await queue.put(None)
 
 
 async def start_search(

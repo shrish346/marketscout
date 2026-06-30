@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { AgentProgress } from "@/components/AgentProgress";
 import { ListingCard } from "@/components/ListingCard";
@@ -38,6 +38,21 @@ export default function HomePage() {
   const [hideHighScamRisk, setHideHighScamRisk] = useState(false);
   const [minReliability, setMinReliability] = useState(0);
   const [searchComplete, setSearchComplete] = useState(false);
+
+  const unsubscribeRef = useRef<(() => void) | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const teardownStream = useCallback(() => {
+    unsubscribeRef.current?.();
+    unsubscribeRef.current = null;
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, []);
+
+  // Close any open stream when the page unmounts.
+  useEffect(() => teardownStream, [teardownStream]);
 
   useEffect(() => {
     const settings = loadSettings();
@@ -78,23 +93,24 @@ export default function HomePage() {
     if (event.type === "search_complete") {
       setLoading(false);
       setSearchComplete(true);
+      if (event.error) {
+        setError(event.message || event.error);
+      }
     }
   }, []);
 
   const handleSearch = async () => {
     if (!query.trim() || sources.length === 0) return;
 
+    // Tear down any stream still running from a previous search.
+    teardownStream();
+
     setLoading(true);
     setError(null);
     setListings([]);
     setSelected(null);
     setSearchComplete(false);
-    setAgentStatus({
-      craigslist: sources.includes("craigslist")
-        ? { state: "idle", count: 0 }
-        : { state: "idle", count: 0 },
-      ebay: sources.includes("ebay") ? { state: "idle", count: 0 } : { state: "idle", count: 0 },
-    });
+    setAgentStatus(INITIAL_STATUS);
 
     try {
       const searchId = await startSearch({
@@ -104,7 +120,7 @@ export default function HomePage() {
         sources,
       });
 
-      const unsubscribe = subscribeToSearch(
+      unsubscribeRef.current = subscribeToSearch(
         searchId,
         handleEvent,
         (err) => {
@@ -113,7 +129,7 @@ export default function HomePage() {
         }
       );
 
-      setTimeout(() => unsubscribe(), 120000);
+      timeoutRef.current = setTimeout(() => teardownStream(), 120000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Search failed");
       setLoading(false);

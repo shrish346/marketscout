@@ -34,9 +34,18 @@ async def health():
     return {"status": "ok"}
 
 
+def _client_key(http_request: Request) -> str:
+    # Behind the Next.js proxy, http_request.client.host is always the proxy's
+    # IP, so prefer the forwarded client IP when the proxy provides it.
+    forwarded = http_request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return http_request.client.host if http_request.client else "default"
+
+
 @app.post("/api/search", response_model=SearchResponse)
 async def create_search(request: SearchRequest, http_request: Request):
-    client_key = http_request.client.host if http_request.client else "default"
+    client_key = _client_key(http_request)
     try:
         search_id, _ = await start_search(request, client_key=client_key)
     except ValueError as exc:
